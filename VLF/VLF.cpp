@@ -3,7 +3,6 @@
 #include "VLF.h"
 
 Servo SteeringServo;
-const 
 
 void vlf_init(){
   Serial.begin(115200);
@@ -29,6 +28,7 @@ void vlf_init(){
   SteeringServo.attach(RC_SERVO_PIN);
   // 서보 정중앙 설정
   SteeringServo.write(NEURAL_ANGLE);
+  delay(500);
 }
 
 long get_ult(int trig, int echo){
@@ -56,8 +56,8 @@ void motor_stop(){
 }
 
 void steering_control(int angle){
-  if(angle < 0) angle = max(angle, LEFT_MAX_STEER_ANGLE);
-  else if(angle > 0) angle = min(angle, RIGHT_MAX_STEER_ANGLE);
+  if(angle < 0) angle = max(angle, LEFT_STEER_ANGLE);
+  else if(angle > 0) angle = min(angle, RIGHT_STEER_ANGLE);
 
   SteeringServo.write(NEURAL_ANGLE + angle);
 }
