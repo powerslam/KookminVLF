@@ -36,9 +36,9 @@ void motor_stop();
 
 /// 서보 모터 핀 번호 및 각도 ///
 #define RC_SERVO_PIN 8
-#define NEURAL_ANGLE 90
-#define LEFT_STEER_ANGLE -70
-#define RIGHT_STEER_ANGLE 70
+#define NEURAL_ANGLE 82
+#define LEFT_STEER_ANGLE -75
+#define RIGHT_STEER_ANGLE 55
 /// 서보 모터 핀 번호 및 각도 ///
 
 void steering_control(int angle);
