@@ -2,7 +2,7 @@
 #define VLF_H
 
 // pinMode 및 변수 초기화
-void init();
+void vlf_init();
 
 /// 초음파 핀 번호 ///
 #define FRONT_TRIG 9
@@ -37,8 +37,8 @@ void motor_stop();
 /// 서보 모터 핀 번호 및 각도 ///
 #define RC_SERVO_PIN 8
 #define NEURAL_ANGLE 90
-#define LEFT_MAX_STEER_ANGLE -70
-#define RIGHT_MAX_STEER_ANGLE 70
+#define LEFT_STEER_ANGLE -70
+#define RIGHT_STEER_ANGLE 70
 /// 서보 모터 핀 번호 및 각도 ///
 
 void steering_control(int angle);
