@@ -63,20 +63,47 @@ void get_line_data() {
 
 void get_mid_pos(short threshold) {
   int cnt = 0;
-  midPos = 0;
+  rightPos = leftPos = midPos = 0;
 
-  for(int i = ROI; i < NPIXELS - 1; i++){
+  // Serial.print("left : ");
+  for(int i = ROI; i < MID_PIXEL_IDX; i++){
     diffPixel[i] = abs(Pixel[i + 1] - Pixel[i]);
     if(diffPixel[i] < threshold) diffPixel[i] = 0;
     else {
+      // Serial.print(i);
+      // Serial.print(" ");
       diffPixel[i] = 255;
-      midPos += i;
+      rightPos += i;
       cnt += 1;
     }
   }
 
-  midPos /= cnt;
+  rightPos /= cnt;
+
+  cnt = 0;
+  // Serial.print("right : ");
+  for(int i = MID_PIXEL_IDX; i < NPIXELS - 1; i++){
+    diffPixel[i] = abs(Pixel[i + 1] - Pixel[i]);
+    if(diffPixel[i] < threshold) diffPixel[i] = 0;
+    else {
+      // Serial.print(i);
+      // Serial.print(" ");
+      diffPixel[i] = 255;
+      leftPos += i;
+      cnt += 1;
+    }
+  }
+
+  leftPos /= cnt;
+  midPos = leftPos + rightPos >> 1;
+
+  diffPixel[leftPos] = 127;
+  diffPixel[rightPos] = 127;
+
+  diffPixel[midPos] = 64;
 }
+
+// 1pixel 당 1.45mm ~ 1.5mm 정도 됨
 
 void loop() {
   int i;
@@ -85,9 +112,10 @@ void loop() {
   get_mid_pos(50);
 
   for(int i = 0; i < NPIXELS; i++){
-    Serial.print(Pixel[i]);
+    Serial.print(diffPixel[i]);
     Serial.print(" ");
   }
+
   Serial.println();
   delay(100);
 }
