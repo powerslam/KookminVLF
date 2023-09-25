@@ -19,7 +19,7 @@ void LineScan::init() {
 #endif
 }
 
-void LineScan::read_line_sensor() {
+void LineScan::read_cam() {
   delayMicroseconds(1);  /* Integration time in microseconds */
   delay(10);              /* Integration time in miliseconds  */
 
