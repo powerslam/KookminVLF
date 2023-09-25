@@ -19,20 +19,20 @@ void LineScan::init() {
 #endif
 }
 
-void LineScan::read_cam() {
-  delayMicroseconds (1);      /* Integration time in microseconds */
-  delay(10);                  /* Integration time in miliseconds  */
+void LineScan::read_line_sensor() {
+  delayMicroseconds(1);  /* Integration time in microseconds */
+  delay(10);              /* Integration time in miliseconds  */
 
-  digitalWrite (CLKpin, LOW);
-  digitalWrite (SIpin, HIGH);
+  digitalWrite(CLKpin, LOW);
+  digitalWrite(SIpin, HIGH);
 
-  digitalWrite (CLKpin, HIGH);
-  digitalWrite (SIpin, LOW);
+  digitalWrite(CLKpin, HIGH);
+  digitalWrite(SIpin, LOW);
 
-  delayMicroseconds (1);
+  delayMicroseconds(1);
 
   for (int i = 0; i < NPIXELS; i++) {
-    Pixel[i] = analogRead (AOpin) / 4;
+    Pixel[i] = analogRead(AOpin) / 4;
     digitalWrite (CLKpin, LOW);
     delayMicroseconds (1);
     digitalWrite (CLKpin, HIGH);

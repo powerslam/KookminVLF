@@ -19,7 +19,10 @@ void vlf_init();
 // param
 // 1. trig: trig 핀 번호
 // 2. echo: echo 핀 번호
+#define ULT_FACTOR 0.55
+
 long get_ult(int trig, int echo);
+long distance = 0;
 
 /// 모터(DC) 핀 번호 ///
 #define MOTOR_DIR 4
@@ -36,9 +39,9 @@ void motor_stop();
 
 /// 서보 모터 핀 번호 및 각도 ///
 #define RC_SERVO_PIN 8
-#define NEURAL_ANGLE 90
-#define LEFT_STEER_ANGLE -70
-#define RIGHT_STEER_ANGLE 70
+#define NEURAL_ANGLE 82
+#define LEFT_STEER_ANGLE -75
+#define RIGHT_STEER_ANGLE 55
 /// 서보 모터 핀 번호 및 각도 ///
 
 void steering_control(int angle);
