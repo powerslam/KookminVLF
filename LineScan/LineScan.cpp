@@ -1,14 +1,9 @@
 #include "Arduino.h"
 #include "LineScan.h"
 
-LineScan::LineScan(int thresholdValue): thresholdValue(thresholdValue) {}
+LineScan::LineScan(){}
 
 void LineScan::init() {
-  for(int i = 0; i < NPIXELS; i++){
-    this->LineSensor_Data[i] = 0;
-    this->LineSensor_Data_Adaption[i] = 0;
-  }
-
   pinMode(SIpin, OUTPUT);
   pinMode(CLKpin, OUTPUT);
   pinMode(AOpin, INPUT);
@@ -25,9 +20,6 @@ void LineScan::init() {
 }
 
 void LineScan::read_line_sensor() {
-  this->MaxPixel = 0;
-  this->MinPixel = 1023;
-
   delayMicroseconds(1);  /* Integration time in microseconds */
   delay(10);              /* Integration time in miliseconds  */
 
@@ -41,19 +33,56 @@ void LineScan::read_line_sensor() {
 
   for (int i = 0; i < NPIXELS; i++) {
     Pixel[i] = analogRead(AOpin) / 4;
-    
-    MaxPixel = max(MaxPixel, Pixel[i]);
-    MinPixel = min(MinPixel, Pixel[i]);
-
     digitalWrite (CLKpin, LOW);
     delayMicroseconds (1);
     digitalWrite (CLKpin, HIGH);
   }
-
-  for (i = 0; i < NPIXELS; i++)
-    LineSensor_Data_Adaption[i] = map(Pixel[i], MinPixel, MaxPixel, 0, 255);
 }
 
-void LineScan::calcCentroid() {
-  
+void LineScan::calc_centroid(short threshold) {
+  short cnt = 0;
+  this->rightPos = this->leftPos = this->midPos = 0;
+
+  // 오른쪽 평균 좌표 구하기
+  for(int i = ROI; i < MID_PIXEL_NUM; i++){
+    this->diffPixel[i] = abs(this->Pixel[i + 1] - this->Pixel[i]);
+    if(this->diffPixel[i] < threshold) 
+      // 시각화용 값 할당
+      diffPixel[i] = 0;
+
+    else {
+      // 시각화용 값 할당
+      this->diffPixel[i] = 255;
+      this->rightPos += i;
+      cnt++;
+    }
+  }
+
+  this->rightPos /= cnt;
+
+  // 왼쪽 평균 좌표 구하기
+  cnt = 0;
+  for(int i = MID_PIXEL_NUM; i < NPIXELS - 1; i++){
+    this->diffPixel[i] = abs(this->Pixel[i + 1] - this->Pixel[i]);
+    if(this->diffPixel[i] < threshold) 
+      // 시각화용 값 할당
+      this->diffPixel[i] = 0;
+
+    else {
+      // 시각화용 값 할당
+      this->diffPixel[i] = 255;
+      this->leftPos += i;
+      cnt++;
+    }
+  }
+
+  this->leftPos /= cnt;
+
+  // 중앙 좌표 구하기
+  this->midPos = this->leftPos + this->rightPos >> 1;
+
+  // 시각화용 값 할당
+  this->diffPixel[this->leftPos] = 127;
+  this->diffPixel[this->rightPos] = 127;
+  this->diffPixel[this->midPos] = 64;
 }
