@@ -26,7 +26,7 @@ void loop() {
 
     moter_control(HIGH, 100);
     while(/*라인에 복귀할 때 까지*/1) {
-      av_senser=(0.55*get_ult(RIGHT_TRIG, RIGHT_ECHO))+0.45*av_senser;
+      av_senser=get_ult(RIGHT_TRIG, RIGHT_ECHO);
       //Serial.println(av_senser);
       if (av_senser>15) {
         Serial.println("Case 1");
