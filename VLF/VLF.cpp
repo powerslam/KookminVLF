@@ -40,7 +40,9 @@ long get_ult(int trig, int echo){
 
   digitalWrite(trig, LOW);
 
-  return pulseIn(echo, HIGH) * 17 / 1000; 
+
+  distance = ULT_FACTOR * pulseIn(echo, HIGH) * 17 / 1000 + (1 - ULT_FACTOR) * distance;
+  return distance;
 }
 
 void motor_control(uint8_t dir, int speed){

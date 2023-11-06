@@ -8,7 +8,8 @@
 //// 카메라 핀번호 ////
 
 /// 입력 데이터 수 == 1Line 이고, 128 pixel을 받아옴 ///
-#define NPIXELS 128
+#define NPIXELS 113 // 15 pixel이 쓰레기임
+#define MID_PIXEL_NUM (NPIXELS >> 1)
 
 //// 빠른 아날로그 입력 ////
 #define FASTADC 1
@@ -19,18 +20,21 @@
 
 class LineScan {
   public:
-    int LineSensor_Data_Adaption[NPIXELS];
-
-    LineScan(int thresholdValue);
+    int leftPos, rightPos, midPos, modes;
+  
+  public:
+    LineScan();
 
     void init();
-    void read_line_sensor();
-    void calcCentroid();
+    void read_cam();
+    bool chk_line();
+    void calc_centroid(int threshold);
+    void print_pixels();
 
   private:
-    byte Pixel[NPIXELS];
-    int LineSensor_Data[NPIXELS];
-    int thresholdValue, MaxPixel, MinPixel;
+    int Pixel[NPIXELS], diffPixel[NPIXELS];
+    int countPixels;
+    
 };
 
 #endif
