@@ -31,7 +31,26 @@ void vlf_init(){
   delay(500);
 }
 
-long get_ult(int trig, int echo){
+long get_ult(int dir_flag){
+  int trig, echo;
+
+  switch (dir_flag){
+  case FRONT:
+    trig = FRONT_TRIG;
+    echo = FRONT_ECHO;
+    break;
+
+  case LEFT:
+    trig = LEFT_TRIG;
+    echo = LEFT_ECHO;
+    break;
+
+  case RIGHT:
+    trig = RIGHT_TRIG;
+    echo = RIGHT_ECHO;
+    break;
+  }
+
   digitalWrite(trig, LOW);
   delayMicroseconds(2);
 
@@ -41,7 +60,7 @@ long get_ult(int trig, int echo){
   digitalWrite(trig, LOW);
 
 
-  distance = ULT_FACTOR * pulseIn(echo, HIGH) * 17 / 1000 + (1 - ULT_FACTOR) * distance;
+  long distance = ULT_FACTOR * pulseIn(echo, HIGH) * 17 / 1000 + (1 - ULT_FACTOR) * distance;
   return distance;
 }
 

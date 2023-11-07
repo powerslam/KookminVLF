@@ -5,6 +5,10 @@
 void vlf_init();
 
 /// 초음파 핀 번호 ///
+#define FRONT 0
+#define LEFT 1
+#define RIGHT 2
+
 #define FRONT_TRIG 9
 #define FRONT_ECHO 10
 
@@ -21,8 +25,7 @@ void vlf_init();
 // 2. echo: echo 핀 번호
 #define ULT_FACTOR 0.55
 
-long get_ult(int trig, int echo);
-long distance = 0;
+long get_ult(int dir_flag);
 
 /// 모터(DC) 핀 번호 ///
 #define MOTOR_DIR 4
