@@ -1,21 +1,26 @@
 #include <VLF.h>
 #include <LineScan.h>
 
-#define MOVE 0
+#define MOVE 1
+
+#define MOTOR_SPEED 100
 
 #define NORMAL_MODE 0
 #define MAZE_MODE 1
 #define OBSTACLE_MODE 2
-3
 
-#define P_term 0
-#define I_term 0
-#define D_term 0 
+#define P_TERM 1.75
+#define D_TERM 0.8
 
 LineScan cam;
-int line_angle = 0;
-int robot_mode = 0;
 
+double angle_error = 0;
+double angle_error_prev = 0;
+int angle = 0;
+
+long av_sensor = 0;
+
+int robot_mode = 0;
 bool change_mode;
 
 // 실제 픽셀은 113개임!!!!
@@ -25,19 +30,20 @@ void setup() {
   vlf_init();
   cam.init();
 
-  if(MOVE) motor_control(FRONT_SPIN, 70);
+  if(MOVE) motor_control(FRONT_SPIN, MOTOR_SPEED);
 
-  robot_mode = NORMAL_STATE;
-
-  changeMode = false;
+  robot_mode = OBSTACLE_MODE;
+  change_mode = false;
 }
 
-void print_pixels(){
-  for(int i = 0; i < 128; i++){
-    Serial.print(get_pixel(i));
-    Serial.print(" ");
-  }
-  Serial.println();
+int get_angle(){
+  angle_error_prev = angle_error;
+  angle_error = cam.midPos - MID_PIXEL_NUM;
+
+  angle = P_TERM * angle_error + D_TERM * (angle_error - angle_error_prev);
+  angle = constrain(angle, LEFT_STEER_ANGLE, RIGHT_STEER_ANGLE);
+  
+  return angle;
 }
 
 void loop(){
@@ -47,39 +53,39 @@ void loop(){
 switch(robot_mode){
 case NORMAL_MODE:
   // 한 줄이 전부 흰색이면
-  while(cam.chk_line()) changeMode = true;
-  if(changeMode){
-    changMode = false;
+  while(cam.chk_line()) change_mode = true;
+  if(change_mode){
+    change_mode = false;
     robot_mode = MAZE_MODE;
     // motor_stop(0); // @have to test
     break;
   } // 미로 진입 시
 
   // PID control or Pure Pursuit 로 대체하기
-  if(MOVE) steering_control(0);
+  if(MOVE) steering_control(get_angle());
   break;
 
 case MAZE_MODE:
-  while(cam.chk_line()) changeMode = true;
-  if(changeMode){
+  while(cam.chk_line()) change_mode = true;
+  if(change_mode){
     steering_control(0); // 중심 맞추고 전진해야 함
-    changMode = false;
+    change_mode = false;
     robot_mode = OBSTACLE_MODE;
     break;
   } // 탈출 시
   // 그 pwa 적용하기(라이브러리)
 
-  av_senser=(0.55*get_ult(RIGHT_TRIG, RIGHT_ECHO))+0.45*av_senser;
-  //Serial.println(av_senser);
+  av_sensor = get_ult(RIGHT_TRIG, RIGHT_ECHO);
+  //Serial.println(av_sensor);
   
   //////////////// 미로 주행하기 ////////////////////
-  if (av_senser > 15) {
+  if (av_sensor > 15) {
     // Serial.println("Case 1");
     steering_control(RIGHT_STEER_ANGLE - 10);
     delay(200);
   }
 
-  else if (av_senser < 10) {
+  else if (av_sensor < 10) {
     // Serial.println("Case 2");
     steering_control(LEFT_STEER_ANGLE + 40);
     delay(200);
@@ -88,10 +94,40 @@ case MAZE_MODE:
   break;
 
 case OBSTACLE_MODE:
-  // 코드 나오는 거 보고 결정
-  // 장애물 탐지 코드 ==> NORMAL_MODE 랑 동일함
-  // 장애물 회피코드 ==> ex) 초음파 < 15
-    // 장애물 회피
-    // 장애물 회피 완료 후 changeMode = NORMAL_MODE;
+  // 앞에 장애물이 있는 경우(25cm 미만)
+  if (get_ult(FRONT_TRIG, FRONT_ECHO) < 25 /*&& 현재 라인검출이 정상적으로 되고있을 때*/) {
+    //// 1.5초간 왼쪽 방향으로 전진 ////
+    motor_stop();
+    delay(10);
+    
+    // @@@@@ 각도 확인 필요 @@@@@ //
+    steering_control(LEFT_STEER_ANGLE + 90);
+    motor_control(HIGH, 100);
+    delay(100);
+
+    /// 장애물과 일정 거리를 두며 이동 ///
+    /*
+
+      라인에 어떻게 복귀할 지 생각해보기
+
+    */
+
+    while(/* 라인에 복귀할 때 까지 */1) {
+      av_sensor = get_ult(RIGHT_TRIG, RIGHT_ECHO);
+      //Serial.println(av_sensor);
+      if (av_sensor > 15) {
+        Serial.println("Case 1");
+        steering_control(RIGHT_STEER_ANGLE - 10);
+        delay(200);
+      }
+      else if (av_sensor < 10) {
+        Serial.println("Case 2");
+        steering_control(LEFT_STEER_ANGLE + 40);
+        delay(200);
+      }
+    }
+  } else { // 그렇지 않은 경우 == 라인 타기
+    if(MOVE) steering_control(get_angle());
+  }
   break;
 }}
