@@ -25,7 +25,7 @@ void vlf_init();
 // 2. echo: echo 핀 번호
 #define ULT_FACTOR 0.55
 
-long get_ult(int dir_flag);
+// long get_ult(int trig, int echo);
 
 /// 모터(DC) 핀 번호 ///
 #define MOTOR_DIR 4

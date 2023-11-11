@@ -31,38 +31,42 @@ void vlf_init(){
   delay(500);
 }
 
-long get_ult(int dir_flag){
-  int trig, echo;
+// long get_ult(int trig, int echo){
+//   // int trig, echo;
 
-  switch (dir_flag){
-  case FRONT:
-    trig = FRONT_TRIG;
-    echo = FRONT_ECHO;
-    break;
+//   // switch (dir_flag){
+//   // case FRONT:
+//   //   trig = FRONT_TRIG;
+//   //   echo = FRONT_ECHO;
+//   //   break;
 
-  case LEFT:
-    trig = LEFT_TRIG;
-    echo = LEFT_ECHO;
-    break;
+//   // case LEFT:
+//   //   trig = LEFT_TRIG;
+//   //   echo = LEFT_ECHO;
+//   //   break;
 
-  case RIGHT:
-    trig = RIGHT_TRIG;
-    echo = RIGHT_ECHO;
-    break;
-  }
+//   // case RIGHT:
+//   //   trig = RIGHT_TRIG;
+//   //   echo = RIGHT_ECHO;
+//   //   break;
+//   // }
 
-  digitalWrite(trig, LOW);
-  delayMicroseconds(2);
+//   // long sum = 0, dist = 0, tmp = 0;
+//   // int cnt = 0;
 
-  digitalWrite(trig, HIGH);
-  delayMicroseconds(10);
+//   // for(int i = 0; i < 10; i++){
+//   digitalWrite(trig, LOW);
+//   delayMicroseconds(2);
 
-  digitalWrite(trig, LOW);
+//   digitalWrite(trig, HIGH);
+//   delayMicroseconds(10);
 
+//   digitalWrite(trig, LOW);
 
-  long distance = ULT_FACTOR * pulseIn(echo, HIGH) * 17 / 1000 + (1 - ULT_FACTOR) * distance;
-  return distance;
-}
+//   distance = ULT_FACTOR * pulseIn(echo, HIGH) * 17 / 1000 + (1 - ULT_FACTOR) * distance;
+  
+//   return distance;
+// }
 
 void motor_control(uint8_t dir, int speed){
   speed = max(speed, 0);
