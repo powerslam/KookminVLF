@@ -48,9 +48,12 @@ void LineScan::read_cam() {
   }
 }
 
-bool LineScan::chk_line(){
+bool LineScan::chk_line(int threshold){
   this->countPixels = 0;
-  for(int i = 0; i < NPIXELS; i++) this->countPixels++;
+  for(int i = 0; i < NPIXELS; i++) 
+    if(this->Pixel[i] >= threshold) 
+      this->countPixels++;
+  return countPixels > 40;
 }
 
 void LineScan::calc_centroid(int threshold) {
@@ -59,24 +62,25 @@ void LineScan::calc_centroid(int threshold) {
   
   for(int i = 0; i < MID_PIXEL_NUM; i++){
     if(Pixel[i] >= threshold) {
-      this->rightPos += i;
-      cnt++;
-    }
-  }
-  cnt = cnt == 0 ? 1 : cnt;
-  this->rightPos /= cnt;
-
-  cnt = 0;
-  for(int i = MID_PIXEL_NUM; i < NPIXELS; i++){
-    if(this->Pixel[i] >= threshold) {
       this->leftPos += i;
       cnt++;
     }
   }
 
   cnt = cnt == 0 ? 1 : cnt;
+  this->leftPos /= cnt;
 
-  this->leftPos = this->leftPos <= cnt ? NPIXELS : this->leftPos / cnt;
+  cnt = 0;
+  for(int i = MID_PIXEL_NUM; i < NPIXELS; i++){
+    if(this->Pixel[i] >= threshold) {
+      this->rightPos += i;
+      cnt++;
+    }
+  }
+
+  cnt = cnt == 0 ? 1 : cnt;
+
+  this->rightPos = this->rightPos <= cnt ? NPIXELS : this->rightPos / cnt;
 
   // 중앙 좌표 구하기
   this->midPos = this->leftPos + this->rightPos >> 1;
@@ -84,7 +88,7 @@ void LineScan::calc_centroid(int threshold) {
   // 시각화용 값 할당
   this->Pixel[this->leftPos] = 127;
   this->Pixel[this->rightPos] = 127;
-  this->Pixel[this->midPos] = 64;
+  this->Pixel[this->midPos] = 255;
 }
 
 void LineScan::print_pixels(){

@@ -27,8 +27,10 @@ class LineScan {
 
     void init();
     void read_cam();
-    bool chk_line();
     void calc_centroid(int threshold);
+
+    bool chk_line(int threshold);
+
     void print_pixels();
 
   private:
