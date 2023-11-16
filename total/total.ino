@@ -4,6 +4,9 @@
 #define NORMAL_MODE 0
 #define MAZE_MODE 1
 #define OBSTACLE_MODE 2
+#define FINAL_MODE 3
+
+#define LINE_SPEED 120
 
 // 원래는 차례대로 1.6, 0, 0.5 임
 // 1.5 -> 2 / 0.6 -> 0.8 // 231115 / 100 -> 120
@@ -13,8 +16,7 @@
 
 LineScan cam;
 
-int mode = 0;      // 주행 모드
-bool change_mode;  // 주행 모드 변경 flag
+int mode = OBSTACLE_MODE;      // 주행 모드
 
 // 각도 구할 때 사용되는 변수
 double angle_error = 0;       // 차선 좌표 - 중심 좌표
@@ -87,169 +89,194 @@ void setup() {
   cam.init();
 
   pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
 
   // 첫 시작은 NORMAL_MODE(라인 주행)
-  mode = NORMAL_MODE;
-  change_mode = false;
+
+  // NORMAL_MODE
+  // MAZE_MODE
+  // OBSTACLE_MODE
+  mode = OBSTACLE_MODE;
 
   // 재시작 테스트용
   // for(int i = 0; i < 20; i++) blink(100);
   // motor_stop();
   // delay(5000);
 
-  motor_control(FRONT_SPIN, 120);
+  // motor_control(FRONT_SPIN, 120);
 }
 
 void loop() {
-  switch (mode) {
-    ////////////////////  일반 주행 모드 ///////////////////////
-    case NORMAL_MODE:
-      //만약에 오른쪽 센서에 40cm 미만이 체크되면
-      if (get_ult(RIGHT_TRIG, RIGHT_ECHO) < 60) {
-        mode = MAZE_MODE;
-        steering_control(0);
-        break;
-      }  // 미로 진입
+// 라인 모드
+if(mode == NORMAL_MODE){
+  blink(500);
+  blink(500);
+  blink(500);
 
-      motor_control(FRONT_SPIN, 120);
+  motor_stop();
+  delay(500);
 
-      angle = get_angle();
-      steering_control(angle);
-      Serial.println(angle);
-      delay(40);
-      break;
+  // @todo : 장애물 체크 코드 넣어야 함 --> 걸릴 수도 있음
+  if (get_ult(RIGHT_TRIG, RIGHT_ECHO) < 40) {
+    mode = MAZE_MODE;
+    steering_control(0);
 
+    motor_stop();
+    delay(5000);
+    return;
+  }  // 미로 진입
 
+  motor_control(FRONT_SPIN, LINE_SPEED);
 
-
-
-
-    ////////////////////  미로 주행 모드 ///////////////////////
-    case MAZE_MODE:
-      digitalWrite(13, HIGH);
-      motor_control(HIGH, 150);
-
-      unsigned long start = millis();
-      
-      // // part 1 -- 처음 진입했을 때 라인 탈출
-      while(millis() - start < 5000){
-        ult_error_prev = ult_error;
-        ult_error = get_ult(RIGHT_TRIG, RIGHT_ECHO) - 30; // 0 ~ 10
-        steering_control(constrain(ult_error * 2, -82, 98));
-        delay(50);
-      }
-
-      motor_stop();
-
-      // 가끔 값이 튈 때가 있음 ㅇㅇ
-      for(int i = 0; i < 50; i++){
-        cam.read_cam();
-        Serial.println(cam.chk_line(30));
-        cam.print_pixels();
-        delay(10);
-      }
-      
-      motor_control(HIGH, 150);
-
-      while(true){
-        if(checking_line()){
-          motor_stop();
-          delay(100);
-
-          if(checking_line()) break;
-
-          motor_control(HIGH, 150);
-        }
-        
-        ult_error = get_ult(RIGHT_TRIG, RIGHT_ECHO) - 25; // 0 ~ 10
-        steering_control(constrain(ult_error * 2, -82, 98));
-        delay(50);
-      }
-      
-      // 코너를 2번 주행하면 LED를 끔
-      digitalWrite(13, LOW);
-
-      // motor_control(HIGH, 100);
-      // steering_control(30);
-      // delay(300);
-
-      motor_control(HIGH, 120);
-      while(get_ult(RIGHT_TRIG, RIGHT_ECHO) > 15){
-        steering_control(30);
-        delay(50);
-      }
-
-      motor_stop();
-      steering_control(0);
-      delay(2000);
-
-      mode = OBSTACLE_MODE;
-      break;
+  angle = get_angle();
+  steering_control(angle);
+  Serial.println(angle);
+  delay(40);
+}
 
 
+/// 미로 모드
+else if(mode == MAZE_MODE){
+  blink(500);
+  blink(500);
+  blink(500);
 
+  motor_stop();
+  delay(500);
 
+  digitalWrite(13, HIGH);
+  motor_control(HIGH, 150);
 
-
-    ////////////////////  장애물 주행 모드 ///////////////////////
-    case OBSTACLE_MODE:
-      digitalWrite(13, HIGH);
-
-      if(get_ult(FRONT_TRIG, FRONT_ECHO) < 35) {  // 25cm 안쪽으로 장애물이 있으면
-        // 안정성을 위해 1초간 정지
-        motor_stop();
-        delay(1000);
-
-        // @@@@ 장애물 탈출 @@@@ //
-        steering_control(LEFT_STEER_ANGLE + 20);
-
-        // 우측에 장애물이 없는 동안 회전
-        // <=> 우측에 장애물이 감지될 때까지 회전
-        while(get_ult(RIGHT_TRIG, RIGHT_ECHO) > 30) {
-          // 빨리 돌면 초음파가 체크를 못 할 수도 있어서 천천히 돔
-          motor_control(HIGH, 120);
-          delay(100);
-        }
-
-        motor_control(HIGH, 130);
-        delay(250);
-
-        // 안정성을 위해 잠깐 멈춤
-        steering_control(0);
-        motor_stop();
-        delay(1000);
-
-        motor_control(HIGH, 110);
-
-        bool sign_prev = false;
-        bool sign = false;
-
-        do {
-          right_obstacle = get_ult(RIGHT_TRIG, RIGHT_ECHO);
-
-          // 오른쪽 장애물 간 거리에 따라 회전각이 다름
-          long error = right_obstacle - 10;  // 0 ~ 10
-          steering_control(error * 3);
-          delay(50);
-
-          // @@@ 라인을 체크 했더니 오른쪽으로 가야하는 상황이면 @@@
-          sign_prev = sign;
-          sign = get_angle() > 8;
-          if (sign && !sign_prev) break;
-          // @@@ //
-
-          delay(50);
-        } while (1);  // 위 조건을 만족할 때까지 반복
-
-        mode = NORMAL_MODE;  // 장애물이 종료되면 NORMAL_MODE로 전환
-      }
-
-      // 앞에 장애물이 없는 경우
-      else {
-        steering_control(get_angle());
-        delay(50);
-      }
-      break;
+  unsigned long start = millis();
+  
+  // // part 1 -- 처음 진입했을 때 라인 탈출
+  while(millis() - start < 5000){
+    ult_error_prev = ult_error;
+    ult_error = get_ult(RIGHT_TRIG, RIGHT_ECHO) - 30; // 0 ~ 10
+    steering_control(constrain(ult_error * 2, -82, 98));
+    delay(50);
   }
+
+  motor_stop();
+
+  // 가끔 값이 튈 때가 있음 ㅇㅇ
+  for(int i = 0; i < 50; i++){
+    cam.read_cam();
+    // cam.print_pixels();
+    delay(1);
+  }
+  
+  motor_control(HIGH, 150);
+
+  // 미로 주행
+  while(true){
+    if(checking_line()){
+      motor_stop();
+      delay(100);
+
+      if(checking_line()) break;
+
+      motor_control(HIGH, 150);
+    }
+    
+    ult_error = get_ult(RIGHT_TRIG, RIGHT_ECHO) - 25; // 0 ~ 10
+    steering_control(constrain(ult_error * 2, -82, 98));
+    delay(50);
+  }
+  
+  // 코너를 2번 주행하면 LED를 끔
+  digitalWrite(13, LOW);
+
+  // motor_control(HIGH, 100);
+  // steering_control(30);
+  // delay(300);
+
+  motor_control(HIGH, 120);
+  while(get_ult(RIGHT_TRIG, RIGHT_ECHO) > 15){
+    steering_control(30);
+    delay(50);
+  }
+
+  motor_stop();
+  steering_control(0);
+  delay(2000);
+
+  mode = OBSTACLE_MODE;
+}
+
+else if(mode == OBSTACLE_MODE){
+  digitalWrite(13, HIGH);
+  
+  motor_control(FRONT_SPIN, LINE_SPEED);
+
+  // 25cm 안쪽으로 장애물이 있으면
+  if(get_ult(FRONT_TRIG, FRONT_ECHO) < 35) {
+    // 안정성을 위해 1초간 정지
+    motor_stop();
+    delay(1000);
+
+    // @@@@ 장애물 탈출 @@@@ //
+    steering_control(LEFT_STEER_ANGLE + 20);
+
+    // 우측에 장애물이 없는 동안 회전
+    // <=> 우측에 장애물이 감지될 때까지 회전
+    while(get_ult(RIGHT_TRIG, RIGHT_ECHO) > 30) {
+      // 빨리 돌면 초음파가 체크를 못 할 수도 있어서 천천히 돔
+      motor_control(HIGH, 120);
+      delay(100);
+    }
+
+    motor_control(HIGH, 130);
+    delay(250);
+
+    // 안정성을 위해 잠깐 멈춤
+    steering_control(0);
+    motor_stop();
+    delay(1000);
+
+    motor_control(HIGH, 110);
+
+    bool sign_prev = false;
+    bool sign = false;
+
+    do {
+      right_obstacle = get_ult(RIGHT_TRIG, RIGHT_ECHO);
+
+      // 오른쪽 장애물 간 거리에 따라 회전각이 다름
+      long error = right_obstacle - 10;  // 0 ~ 10
+      steering_control(error * 3);
+      delay(50);
+
+      // @@@ 라인을 체크 했더니 오른쪽으로 가야하는 상황이면 @@@
+      if(checking_line()){
+        motor_stop();
+        delay(100);
+
+        if(checking_line()) break;
+      }
+
+      motor_control(HIGH, 130);
+      // sign_prev = sign;
+      // sign = get_angle() > 8;
+      // if (sign && !sign_prev) break;
+      // @@@ //
+
+      delay(50);
+    } while (1);  // 위 조건을 만족할 때까지 반복
+
+    mode = FINAL_MODE;  // 장애물이 종료되면 NORMAL_MODE로 전환
+    return;
+  }
+
+  // 앞에 장애물이 없는 경우
+  else {
+    steering_control(get_angle());
+    delay(40);
+  }
+}
+
+else {
+  motor_control(HIGH, 120);
+  steering_control(get_angle());
+  delay(40);
+}
 }
