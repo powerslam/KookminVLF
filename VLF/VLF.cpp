@@ -11,9 +11,9 @@ void vlf_init(){
   pinMode(FRONT_TRIG, OUTPUT);
   pinMode(FRONT_ECHO, INPUT);
   
-  // 좌측 초음파
-  pinMode(LEFT_TRIG, OUTPUT);
-  pinMode(LEFT_ECHO, INPUT);
+  // // 좌측 초음파
+  // pinMode(LEFT_TRIG, OUTPUT);
+  // pinMode(LEFT_ECHO, INPUT);
 
   // 우측 초음파
   pinMode(RIGHT_TRIG, OUTPUT);
