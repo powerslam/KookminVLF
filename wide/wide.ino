@@ -251,6 +251,10 @@ else if(mode == OBSTACLE_MODE){
       delay(50);
     } while (1);  // 위 조건을 만족할 때까지 반복
 
+    steering_control(-20);
+    motor_control(HIGH, 130);
+    delay(500);
+
     mode = FINAL_MODE;  // 장애물이 종료되면 NORMAL_MODE로 전환
     return;
   }
