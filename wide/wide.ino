@@ -197,13 +197,13 @@ else if(mode == OBSTACLE_MODE){
   motor_control(FRONT_SPIN, LINE_SPEED);
 
   // 25cm 안쪽으로 장애물이 있으면
-  if(get_ult(FRONT_TRIG, FRONT_ECHO) < 35) {
+  if(get_ult(FRONT_TRIG, FRONT_ECHO) < 45) {
     // 안정성을 위해 1초간 정지
     motor_stop();
     delay(1000);
 
     // @@@@ 장애물 탈출 @@@@ //
-    steering_control(LEFT_STEER_ANGLE + 20);
+    steering_control(LEFT_STEER_ANGLE);
 
     // 우측에 장애물이 없는 동안 회전
     // <=> 우측에 장애물이 감지될 때까지 회전
